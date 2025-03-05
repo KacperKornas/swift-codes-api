@@ -3,24 +3,19 @@ package com.kacper.swiftapi.utils;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.kacper.swiftapi.entity.SwiftCode;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SwiftCodeParser {
 
-    public void parseExcelFile(String filePath) throws IOException, InvalidFormatException {
-        File file = new File(filePath);
+    public List<SwiftCode> parseExcelFile(InputStream inputStream) throws IOException, InvalidFormatException {
+        List<SwiftCode> swiftCodes = new ArrayList<>();
 
-        if (!file.exists()) {
-            System.out.println("File not found: " + filePath);
-            return;
-        }
-
-        try (FileInputStream fis = new FileInputStream(file);
-             Workbook workbook = new XSSFWorkbook(fis)) {
-
+        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
             Sheet sheet = workbook.getSheetAt(0);
 
             for (Row row : sheet) {
@@ -41,15 +36,16 @@ public class SwiftCodeParser {
                 countryName = countryName.toUpperCase();
                 boolean isHeadquarter = "HQ".equalsIgnoreCase(codeType);
 
-                System.out.println("SWIFT Code: " + swiftCode);
-                System.out.println("Bank Name: " + bankName);
-                System.out.println("Country ISO2: " + countryISO2);
-                System.out.println("Country Name: " + countryName);
-                System.out.println("Is Headquarter: " + isHeadquarter);
-                System.out.println("Address: " + address);
-                System.out.println("-------------------------------------------------");
+                SwiftCode swiftCodeObj = new SwiftCode();
+                swiftCodeObj.setCode(swiftCode);
+                swiftCodeObj.setBankName(bankName);
+                swiftCodeObj.setCountry(countryISO2);
+                swiftCodeObj.setCity(townName);
+
+                swiftCodes.add(swiftCodeObj);
             }
         }
+        return swiftCodes;
     }
 
     private String getCellValue(Cell cell) {
@@ -69,22 +65,6 @@ public class SwiftCodeParser {
             case ERROR:
             default:
                 return "";
-        }
-    }
-
-    public static void main(String[] args) {
-        String filePath = System.getenv("SWIFT_DATA_PATH");
-
-        if (filePath == null || filePath.isEmpty()) {
-            System.out.println("The file path was not created in the environment variable SWIFT_DATA_PATH.");
-            return;
-        }
-
-        SwiftCodeParser parser = new SwiftCodeParser();
-        try {
-            parser.parseExcelFile(filePath);
-        } catch (IOException | InvalidFormatException e) {
-            e.printStackTrace();
         }
     }
 }
