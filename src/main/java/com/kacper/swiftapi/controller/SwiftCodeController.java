@@ -5,9 +5,10 @@ import com.kacper.swiftapi.service.SwiftCodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/swift-codes")
@@ -47,5 +48,15 @@ public class SwiftCodeController {
     public ResponseEntity<Void> deleteSwiftCode(@PathVariable Long id) {
         service.deleteSwiftCode(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<String> importSwiftCodesFromExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            service.importSwiftCodesFromExcel(file);
+            return ResponseEntity.ok("SWIFT codes imported successfully.");
+        } catch (IOException | org.apache.poi.openxml4j.exceptions.InvalidFormatException e) {
+            return ResponseEntity.status(500).body("Failed to import SWIFT codes: " + e.getMessage());
+        }
     }
 }
