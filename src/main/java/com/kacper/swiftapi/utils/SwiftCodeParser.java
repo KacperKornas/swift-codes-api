@@ -4,12 +4,14 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.kacper.swiftapi.entity.SwiftCode;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class SwiftCodeParser {
 
     public List<SwiftCode> parseExcelFile(InputStream inputStream) throws IOException, InvalidFormatException {
