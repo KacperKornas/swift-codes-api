@@ -42,7 +42,6 @@ public class SwiftCodeParser {
                 swiftCodeObj.setCode(swiftCode);
                 swiftCodeObj.setBankName(bankName);
                 swiftCodeObj.setCountry(countryISO2);
-                swiftCodeObj.setCity(townName);
 
                 swiftCodes.add(swiftCodeObj);
             }
