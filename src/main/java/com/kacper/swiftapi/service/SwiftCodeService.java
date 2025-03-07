@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.kacper.swiftapi.entity.SwiftCode;
 import com.kacper.swiftapi.repository.SwiftCodeRepository;
 import com.kacper.swiftapi.utils.SwiftCodeParser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,11 +14,13 @@ import java.util.Optional;
 @Service
 public class SwiftCodeService {
 
-    @Autowired
-    private SwiftCodeRepository repository;
+    private final SwiftCodeRepository repository;
+    private final SwiftCodeParser swiftCodeParser;
 
-    @Autowired
-    private SwiftCodeParser swiftCodeParser;
+    public SwiftCodeService(SwiftCodeRepository repository, SwiftCodeParser swiftCodeParser) {
+        this.repository = repository;
+        this.swiftCodeParser = swiftCodeParser;
+    }
 
     public List<SwiftCode> getAllSwiftCodes() {
         return repository.findAll();
@@ -55,9 +56,6 @@ public class SwiftCodeService {
     public void importSwiftCodesFromExcel(MultipartFile file) throws IOException, InvalidFormatException,
             org.apache.poi.openxml4j.exceptions.InvalidFormatException {
         List<SwiftCode> swiftCodes = swiftCodeParser.parseExcelFile(file.getInputStream());
-
-        for (SwiftCode swiftCode : swiftCodes) {
-            repository.save(swiftCode);
-        }
+        repository.saveAll(swiftCodes);
     }
 }
