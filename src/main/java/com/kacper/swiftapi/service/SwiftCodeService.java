@@ -43,7 +43,6 @@ public class SwiftCodeService {
                     existing.setCode(updatedSwiftCode.getCode());
                     existing.setBankName(updatedSwiftCode.getBankName());
                     existing.setCountry(updatedSwiftCode.getCountry());
-                    existing.setCity(updatedSwiftCode.getCity());
                     return repository.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("SWIFT code not found with id: " + id));
