@@ -30,8 +30,9 @@ public class SwiftCodeController {
     }
 
     @PostMapping
-    public SwiftCode createSwiftCode(@RequestBody SwiftCode swiftCode) {
-        return service.createSwiftCode(swiftCode);
+    public ResponseEntity<SwiftCode> createSwiftCode(@RequestBody SwiftCode swiftCode) {
+        SwiftCode createdSwiftCode = service.createSwiftCode(swiftCode);
+        return ResponseEntity.status(201).body(createdSwiftCode);
     }
 
     @PutMapping("/{id}")
@@ -47,7 +48,7 @@ public class SwiftCodeController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSwiftCode(@PathVariable Long id) {
         service.deleteSwiftCode(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();  // Status 204 No Content
     }
 
     @PostMapping("/import")
