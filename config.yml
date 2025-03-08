@@ -1,0 +1,33 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: swift-mysql
+    environment:
+      MYSQL_DATABASE: swift_db
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: swiftuser
+      MYSQL_PASSWORD: swiftpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  swift-api:
+    build: .
+    container_name: swift-api
+    environment:
+      DB_USERNAME: swiftuser
+      DB_PASSWORD: swiftpass
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/swift_db
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
+
