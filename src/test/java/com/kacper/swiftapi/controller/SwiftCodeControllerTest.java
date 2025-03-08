@@ -37,48 +37,67 @@ public class SwiftCodeControllerTest {
 
     @Test
     void testGetAllSwiftCodes() throws Exception {
-        SwiftCode swiftCode = new SwiftCode(null, "SWIFT123", "Bank ABC", "PL");
+        SwiftCode swiftCode = new SwiftCode();
+        swiftCode.setSwiftCode("SWIFT123");
+        swiftCode.setBankName("Bank ABC");
+        swiftCode.setCountryISO2("PL");
+        swiftCode.setCountryName("PL");
+        swiftCode.setAddress("");
+        swiftCode.setHeadquarter(false);
         swiftCodeRepository.save(swiftCode);
 
-        mockMvc.perform(get("/api/swift-codes"))
+        mockMvc.perform(get("/v1/swift-codes/SWIFT123"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].code").value("SWIFT123"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].bankName").value("Bank ABC"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].country").value("PL"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.swiftCode").value("SWIFT123"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.bankName").value("Bank ABC"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.countryISO2").value("PL"));
     }
 
     @Test
     void testCreateSwiftCode() throws Exception {
-        mockMvc.perform(post("/api/swift-codes")
+        String json = "{\"swiftCode\": \"SWIFT456\", \"bankName\": \"Bank XYZ\", \"address\": \"\", \"countryISO2\": \"DE\", \"countryName\": \"DE\", \"isHeadquarter\": false}";
+        mockMvc.perform(post("/v1/swift-codes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"code\": \"SWIFT456\", \"bankName\": \"Bank XYZ\", \"country\": \"DE\"}"))
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("SWIFT456"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.bankName").value("Bank XYZ"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.country").value("DE"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Swift code created successfully"));
     }
 
     @Test
     void testUpdateSwiftCode() throws Exception {
-        SwiftCode swiftCode = swiftCodeRepository.save(new SwiftCode(null, "SWIFT123", "Bank ABC", "PL"));
+        SwiftCode swiftCode = new SwiftCode();
+        swiftCode.setSwiftCode("SWIFT123");
+        swiftCode.setBankName("Bank ABC");
+        swiftCode.setCountryISO2("PL");
+        swiftCode.setCountryName("PL");
+        swiftCode.setAddress("");
+        swiftCode.setHeadquarter(false);
+        swiftCode = swiftCodeRepository.save(swiftCode);
 
-        mockMvc.perform(put("/api/swift-codes/" + swiftCode.getId())
+        String json = "{\"swiftCode\": \"SWIFT456\", \"bankName\": \"Bank XYZ\", \"address\": \"\", \"countryISO2\": \"DE\", \"countryName\": \"DE\", \"isHeadquarter\": false}";
+        mockMvc.perform(put("/v1/swift-codes/SWIFT123")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"code\": \"SWIFT456\", \"bankName\": \"Bank XYZ\", \"country\": \"DE\"}"))
+                        .content(json))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("SWIFT456"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.bankName").value("Bank XYZ"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.country").value("DE"));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Swift code updated successfully"));
     }
 
     @Test
     void testDeleteSwiftCode() throws Exception {
-        SwiftCode swiftCode = swiftCodeRepository.save(new SwiftCode(null, "SWIFT123", "Bank ABC", "PL"));
+        SwiftCode swiftCode = new SwiftCode();
+        swiftCode.setSwiftCode("SWIFT123");
+        swiftCode.setBankName("Bank ABC");
+        swiftCode.setCountryISO2("PL");
+        swiftCode.setCountryName("PL");
+        swiftCode.setAddress("");
+        swiftCode.setHeadquarter(false);
+        swiftCodeRepository.save(swiftCode);
 
-        mockMvc.perform(delete("/api/swift-codes/" + swiftCode.getId()))
-                .andExpect(MockMvcResultMatchers.status().isNoContent());
+        mockMvc.perform(delete("/v1/swift-codes/SWIFT123"))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Swift code deleted successfully"));
 
-        Optional<SwiftCode> deletedSwiftCode = swiftCodeRepository.findById(swiftCode.getId());
+        Optional<SwiftCode> deletedSwiftCode = swiftCodeRepository.findBySwiftCode("SWIFT123");
         assert deletedSwiftCode.isEmpty();
     }
 
@@ -88,20 +107,21 @@ public class SwiftCodeControllerTest {
                 "file", "swift-codes.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", createTestExcelFile()
         );
 
-        mockMvc.perform(multipart("/api/swift-codes/import").file(file))
+        mockMvc.perform(multipart("/v1/swift-codes/import").file(file))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().string("SWIFT codes imported successfully."));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("SWIFT codes imported successfully."));
     }
 
     private byte[] createTestExcelFile() throws IOException {
         Workbook workbook = new XSSFWorkbook();
-        workbook.createSheet("SWIFT Codes").createRow(0).createCell(0).setCellValue("code");
+        workbook.createSheet("SWIFT Codes").createRow(0).createCell(0).setCellValue("swiftCode");
         workbook.getSheetAt(0).getRow(0).createCell(1).setCellValue("bankName");
         workbook.getSheetAt(0).getRow(0).createCell(2).setCellValue("country");
+        workbook.getSheetAt(0).getRow(0).createCell(3).setCellValue("address");
         workbook.getSheetAt(0).createRow(1).createCell(0).setCellValue("SWIFT001");
         workbook.getSheetAt(0).getRow(1).createCell(1).setCellValue("Bank A");
         workbook.getSheetAt(0).getRow(1).createCell(2).setCellValue("US");
-
+        workbook.getSheetAt(0).getRow(1).createCell(3).setCellValue("");
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         workbook.write(outputStream);
         workbook.close();

@@ -1,11 +1,14 @@
 package com.kacper.swiftapi.utils;
 
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.kacper.swiftapi.entity.SwiftCode;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -13,59 +16,45 @@ import java.util.List;
 
 @Component
 public class SwiftCodeParser {
-
-    public List<SwiftCode> parseExcelFile(InputStream inputStream) throws IOException, InvalidFormatException {
+    public List<SwiftCode> parseExcelFile(InputStream is) throws IOException, InvalidFormatException {
         List<SwiftCode> swiftCodes = new ArrayList<>();
-
-        try (Workbook workbook = new XSSFWorkbook(inputStream)) {
-            Sheet sheet = workbook.getSheetAt(0);
-
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) {
-                    continue;
-                }
-
-                String countryISO2 = getCellValue(row.getCell(0));
-                String swiftCode = getCellValue(row.getCell(1));
-                String codeType = getCellValue(row.getCell(2));
-                String bankName = getCellValue(row.getCell(3));
-                String address = getCellValue(row.getCell(4));
-                String townName = getCellValue(row.getCell(5));
-                String countryName = getCellValue(row.getCell(6));
-                String timeZone = getCellValue(row.getCell(7));
-
-                countryISO2 = countryISO2.toUpperCase();
-                countryName = countryName.toUpperCase();
-                boolean isHeadquarter = "HQ".equalsIgnoreCase(codeType);
-
-                SwiftCode swiftCodeObj = new SwiftCode();
-                swiftCodeObj.setCode(swiftCode);
-                swiftCodeObj.setBankName(bankName);
-                swiftCodeObj.setCountry(countryISO2);
-
-                swiftCodes.add(swiftCodeObj);
+        Workbook workbook = WorkbookFactory.create(is);
+        Sheet sheet = workbook.getSheetAt(0);
+        boolean firstRow = true;
+        for (Row row : sheet) {
+            if (firstRow) {
+                firstRow = false;
+                continue;
             }
+            SwiftCode swiftCodeObj = new SwiftCode();
+            Cell codeCell = row.getCell(0);
+            Cell bankNameCell = row.getCell(1);
+            Cell countryCell = row.getCell(2);
+            String code = getCellValueAsString(codeCell);
+            String bankName = getCellValueAsString(bankNameCell);
+            String country = getCellValueAsString(countryCell);
+            swiftCodeObj.setSwiftCode(code);
+            swiftCodeObj.setBankName(bankName);
+            if (row.getPhysicalNumberOfCells() > 3) {
+                swiftCodeObj.setAddress(getCellValueAsString(row.getCell(3)));
+            } else {
+                swiftCodeObj.setAddress("");
+            }
+            swiftCodeObj.setCountryISO2(country.toUpperCase());
+            swiftCodeObj.setCountryName(country.toUpperCase());
+            boolean isHeadquarter = code.endsWith("XXX");
+            swiftCodeObj.setHeadquarter(isHeadquarter);
+            swiftCodes.add(swiftCodeObj);
         }
+        workbook.close();
         return swiftCodes;
     }
 
-    private String getCellValue(Cell cell) {
-        if (cell == null) {
-            return "";
-        }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue().trim();
-            case NUMERIC:
-                return String.valueOf((long) cell.getNumericCellValue());
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                return cell.getCellFormula();
-            case BLANK:
-            case ERROR:
-            default:
-                return "";
-        }
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) return "";
+        if (cell.getCellType() == CellType.STRING) return cell.getStringCellValue();
+        else if (cell.getCellType() == CellType.NUMERIC) return String.valueOf((int) cell.getNumericCellValue());
+        else if (cell.getCellType() == CellType.BOOLEAN) return String.valueOf(cell.getBooleanCellValue());
+        else return "";
     }
 }
