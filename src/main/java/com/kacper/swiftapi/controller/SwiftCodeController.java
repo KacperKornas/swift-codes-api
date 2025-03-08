@@ -1,5 +1,4 @@
 package com.kacper.swiftapi.controller;
-
 import com.kacper.swiftapi.dto.CountrySwiftCodesDto;
 import com.kacper.swiftapi.dto.MessageResponse;
 import com.kacper.swiftapi.dto.SwiftCodeDto;
