@@ -22,33 +22,39 @@ public class SwiftCodeParser {
                 firstRow = false;
                 continue;
             }
-
-            SwiftCode swiftCodeObj = new SwiftCode();
-
-            String countryISO2 = getCellValueAsString(row.getCell(0)).trim().toUpperCase();
-
+            if (isRowEmpty(row)) continue;
             String swiftCode = getCellValueAsString(row.getCell(1)).trim().toUpperCase();
-
+            if (swiftCode.isEmpty()) {
+                System.out.println("Empty SWIFT code at row: " + row.getRowNum());
+                continue;
+            }
+            SwiftCode swiftCodeObj = new SwiftCode();
+            String countryISO2 = getCellValueAsString(row.getCell(0)).trim().toUpperCase();
             String codeType = getCellValueAsString(row.getCell(2)).trim().toUpperCase();
             boolean isHeadquarter = codeType.contains("HQ") || codeType.equals("HEADQUARTERS");
-
             String bankName = getCellValueAsString(row.getCell(3)).trim();
-
             String address = getCellValueAsString(row.getCell(4)).trim();
-
-            String countryName = getCellValueAsString(row.getCell(6)).trim().toUpperCase();
-
+            String countryName = getCellValueAsString(row.getCell(7)).trim().toUpperCase();
             swiftCodeObj.setCountryISO2(countryISO2);
             swiftCodeObj.setCountryName(countryName);
             swiftCodeObj.setSwiftCode(swiftCode);
             swiftCodeObj.setBankName(bankName);
             swiftCodeObj.setAddress(address);
             swiftCodeObj.setHeadquarter(isHeadquarter);
-
             swiftCodes.add(swiftCodeObj);
         }
         workbook.close();
         return swiftCodes;
+    }
+
+    private boolean isRowEmpty(Row row) {
+        for (int i = 0; i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null && cell.getCellType() != CellType.BLANK && !getCellValueAsString(cell).trim().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private String getCellValueAsString(Cell cell) {
